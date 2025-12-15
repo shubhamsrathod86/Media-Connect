@@ -1,0 +1,9 @@
+get 
+
+    - getAllUsers
+
+
+Post 
+    -Post
+    -likes
+    -comments
