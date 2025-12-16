@@ -5,6 +5,8 @@ const postSchema = new mongoose.Schema({
     media: { type: String, required: true }, // URL or path to media file
     caption: { type: String },
     likeCount: { type: Number, default: 0 },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     comments: [commentSchema],
     isDeleted: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },

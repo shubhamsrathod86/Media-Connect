@@ -4,8 +4,16 @@ import User from '../model/userModel.js';
 // Create a new post
 export const createPost = async (req, res) => {
     try {
-        const { media, caption, userId } = req.body;
-        const post = new Post({ media, caption });
+        const userId = getUserIdFromHeader(req);
+        let { media, caption } = req.body;
+        // Ensure media is an array and not empty
+        if (!Array.isArray(media)) {
+            media = media ? [media] : [];
+        }
+        if (!media.length) {
+            return res.status(400).json({ message: 'At least one media item is required.' });
+        }
+        const post = new Post({ media, caption, createdBy: userId });
         await post.save();
         // Optionally add post to user's posts array
         if (userId) {
@@ -63,11 +71,27 @@ export const deletePost = async (req, res) => {
 // Like post
 export const likePost = async (req, res) => {
     try {
+        const userId = getUserIdFromHeader(req);
+        if (!userId) {
+            return res.status(401).json({ message: 'No token or user ID provided' });
+        }
         const post = await Post.findById(req.params.id);
         if (!post) return res.status(404).json({ message: 'Post not found' });
-        post.likeCount += 1;
-        await post.save();
-        res.json({ message: 'Post liked', likeCount: post.likeCount });
+        post.likedBy = post.likedBy || [];
+        const alreadyLiked = post.likedBy.includes(userId);
+        if (alreadyLiked) {
+            // Unlike the post
+            post.likedBy = post.likedBy.filter(id => id.toString() !== userId);
+            post.likeCount = Math.max(0, post.likeCount - 1);
+            await post.save();
+            return res.json({ message: 'Post unliked', likeCount: post.likeCount });
+        } else {
+            // Like the post
+            post.likeCount += 1;
+            post.likedBy.push(userId);
+            await post.save();
+            return res.json({ message: 'Post liked', likeCount: post.likeCount });
+        }
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
     }

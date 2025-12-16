@@ -23,9 +23,9 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
 	try {
 		const { username, password } = req.body;
-        if (!username || !password) {
-            return res.status(400).json({ message: 'Please provide username and password' });
-        }
+		if (!username || !password) {
+			return res.status(400).json({ message: 'Please provide username and password' });
+		}
 		const user = await User.findOne({ username });
 		if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 		const isMatch = await bcrypt.compare(password, user.password);
